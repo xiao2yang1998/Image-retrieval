@@ -25,6 +25,6 @@ class ImageBlock:
         im = io.imread(self.image_path)
         im = equalize_hist(rgb2gray(im))
         corners = corner_peaks(corner_harris(im), min_distance=2)
-        #self.show_corners(corners, im)
+        self.show_corners(corners, im)
         return len(corners)
 
