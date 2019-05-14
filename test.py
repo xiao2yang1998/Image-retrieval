@@ -21,6 +21,7 @@ def rgb22hsv(r, g, b):
     mx = max(r, g, b)
     mn = min(r, g, b)
     df = mx - mn
+
     if mx == mn:
         h = 0
     elif mx == r:
