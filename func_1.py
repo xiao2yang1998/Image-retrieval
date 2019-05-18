@@ -15,6 +15,7 @@ import math
 import heapq
 
 
+
 def rgb22hsv(r, g, b):
     r, g, b = r / 255.0, g / 255.0, b / 255.0
     import math
@@ -45,7 +46,6 @@ def quantilize(h, s, v):
     hlist = [20, 40, 75, 155, 190, 270, 290, 316, 360]
     slist = [0.25, 0.7, 1.0]
     vlist = [0.3, 0.8, 1.0]
-
     for i in range(len(hlist)):
         if h <= hlist[i]:
             h = i % 8
@@ -58,7 +58,6 @@ def quantilize(h, s, v):
         if v <= vlist[i]:
             v = i
             break
-
     return 9 * h + 3 * s + v
 
 
@@ -142,7 +141,6 @@ class DataMomemt():
 
     def moment(self):
         color_features = []
-
         for image_name in self.picture_names:
             try:
                 color_feature = []
@@ -162,7 +160,6 @@ def processFolder(path):
         csv_writer = csv.writer(out, dialect='excel')
         for f in feature:
             csv_writer.writerow(f)
-
 
 def initial_csv():
     # for i in range(1,10):

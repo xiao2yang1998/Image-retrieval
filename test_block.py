@@ -13,11 +13,12 @@ import codecs
 import csv
 import math
 import heapq
-
+import func_1 as f1
 
 
 if __name__ == '__main__':
-    filename = 'total/001_0043.jpg'
-    im = ImageBlock.ImageBlock(filename)
-    re = im.get_corners()
+    filename = '004_0092.jpg'
+    im = ImageBlock.ImageBlock("total",filename)
+    re = im.get_results
+
     print(re)

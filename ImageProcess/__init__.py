@@ -1,1 +1,1 @@
-all = ['ImageBlcck']
+all = ['ImageBlcck','ImageTexture']
