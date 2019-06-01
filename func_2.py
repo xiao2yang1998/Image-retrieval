@@ -20,29 +20,36 @@ hlist = [20, 40, 75, 155, 190, 270, 290, 316, 360]
 slist = [0.25, 0.7, 1.0]
 vlist = [0.3, 0.8, 1.0]
 
+
+def get_imlist(path):
+    return [os.path.join(path,f) for f in os.listdir(path) if f.endswith('.jpg') or f.endswith('.bmp') or f.endswith('.png')]
+
+
+
 def initial_csv_color(path):
-    picture_names = os.listdir(path)
-    picture_names = picture_names[1:]
-    sign = 0
-    for image_name in picture_names:
+    picture_path_list = get_imlist(path)
+    for img_path in picture_path_list:
         try:
-            if image_name == "007_0061.jpg":
-                sign = 1
-            if sign == 1:
-                im = ImageBlock.ImageBlock(path,image_name)
-                im.get_results
+            img_name = os.path.split(img_path)[1]
+            im = ImageBlock.ImageBlock(path,img_name)
+            im.get_results
         except OSError:
-            print(image_name + u'图像文件发生错误')
+            print(img_path + u'图像文件发生错误')
 
 
 def initial_csv_texture(path):
-    picture_names = os.listdir(path)
-    picture_names = picture_names[1:]
-    for image_name in picture_names:
+    picture_path_list = get_imlist(path)
+    for img_path in picture_path_list:
         try:
-            im = ImageTexture.get_results(path, image_name)
+            img_name = os.path.split(img_path)[1]
+            im = ImageTexture.get_results(path, img_name)
         except OSError:
-            print(image_name + u'图像文件发生错误')
+            print(img_name + u'图像文件发生错误')
+
+
+def processFolder(path):
+    initial_csv_color(path)
+    initial_csv_texture(path)
 
 
 def get_hsv(l):
@@ -120,7 +127,6 @@ def testone():
     tagrget_cato = f1.getCategory(target_image)
 
     re = []
-
     for i in range(len(total_color)):
         re_temp = [total_color_title[i]]
         dist = 0.5*s_color(total_color[i],color_feature)+0.5*s_texture(total_texture[i],texture_feature)
@@ -137,14 +143,21 @@ def testone():
         # img.save('result/similar' + str(i) + '.jpg')
         if (f1.getCategory(result[i][0]) == tagrget_cato):
             right += 1;
-    ratio = right/10
-    print(ratio)
-    return ratio
-    # Image.open('total/' + target_image).show()
+    if(right>=9):
+        for i in range(10):
+            s = target_image
+            img = Image.open('total/' + result[i][0])
+            img.save('test/similar' +s+'____'+ str(i) + '.jpg')
 
-if __name__ == '__main__':
-    # initial_csv('total')
-    # initial_csv_texture('total')
+    ratio = right/10
+    return ratio
+
+
+def query(img_path,num):
+    color_feature = ImageBlock.get_one_result(img_path)
+    color_feature = process_color_feature_from_csv(color_feature)
+    texture_feature = ImageTexture.get_one_result(img_path)
+    # load the total data
     with open('fuc2_c.csv', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=':', quotechar='|')
         total_color = []
@@ -153,16 +166,7 @@ if __name__ == '__main__':
             a = list(filter(None, (row[0].split(','))))
             total_color_title.append(a[0])
             a = a[1:]
-            temp_dict = {}
-            temp = 0.0
-            for i in range(len(a)):
-
-                if (i % 2 == 0):
-                    temp_dict[int(a[i])] = float(a[i + 1])
-                    temp += temp_dict[int(a[i])]
-            for j in temp_dict:
-                temp_dict[j] /= temp
-                temp_dict[j] = float("%.02f" % float(temp_dict[j]))
+            temp_dict = process_color_feature_from_csv(a)
             total_color.append(temp_dict)
     csvfile.close()
 
@@ -177,11 +181,60 @@ if __name__ == '__main__':
             a = [float("%.02f" % float(i)) for i in a]
             total_texture.append(a)
     csvfile.close()
-    re = 0
-    for i in range(100):
-        re+= testone()
-    re = re/100
-    print("total",re)
+    # start to query
+    re = []
+    for i in range(len(total_color)):
+        re_temp = [total_color_title[i]]
+        dist = 0.5*s_color(total_color[i],color_feature)+0.5*s_texture(total_texture[i],texture_feature)
+        re_temp.append(dist)
+        re_temp.append(i)
+        re.append(re_temp)
+
+    # 距离越小，越相近
+    result = heapq.nsmallest(num, re, key=lambda s: s[1])
+    # img = Image.open(img_path)
+    # img.save('result/re_2_target.jpg')
+    # for i in range(10):
+    #     img = Image.open('total/' + result[i][0])
+    #     img.save('result/re_2_similar' + str(i) + '.jpg')
+    re = [i[0] for i in result]
+    return re
+
+def process_color_feature_from_csv(a):
+    temp_dict = {}
+    temp = 0.0
+    for i in range(len(a)):
+        if (i % 2 == 0):
+            temp_dict[int(a[i])] = float(a[i + 1])
+            temp += temp_dict[int(a[i])]
+    for j in temp_dict:
+        temp_dict[j] /= temp
+        temp_dict[j] = float("%.02f" % float(temp_dict[j]))
+    return temp_dict
+
+def process_texture_feature_from_csv(a):
+    temp_dict = {}
+    temp = 0.0
+    for i in range(len(a)):
+        if (i % 2 == 0):
+            temp_dict[int(a[i])] = float(a[i + 1])
+            temp += temp_dict[int(a[i])]
+    for j in temp_dict:
+        temp_dict[j] /= temp
+        temp_dict[j] = float("%.02f" % float(temp_dict[j]))
+    return temp_dict
+
+if __name__ == '__main__':
+
+#     # initial_csv('total')
+#     # initial_csv_texture('total')
+
+
+    #
+    # img = 'total/006_0109.jpg'
+    # re = query(img, 10)
+    # print(re)
+    processFolder('05')
 
 
 

@@ -75,11 +75,19 @@ def get_results(path,image_name):
     asm, con, eng, idm = feature_computer(glcm_0)
     re = [image_name,asm, con, eng, idm]
     print(re)
-    outfile = "fuc2_texture.csv"
+    outfile = "fuc2_t.csv"
     with open(outfile, 'a', newline='') as out:
         csv_writer = csv.writer(out, dialect='excel')
         csv_writer.writerow(re)
     return 0
+
+def get_one_result(img_path):
+    img = cv2.imread(img_path)
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    glcm_0 = getGlcm(img_gray, 1, 0)
+    asm, con, eng, idm = feature_computer(glcm_0)
+    re = [asm, con, eng, idm]
+    return re
 
 
 if __name__ == '__main__':

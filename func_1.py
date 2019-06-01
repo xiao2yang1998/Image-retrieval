@@ -132,12 +132,15 @@ def getDistance_Pear(x, y):
     den = math.sqrt((sumofx2 - float(sum1 ** 2) / n) * (sumofy2 - float(sum2 ** 2) / n))
     return num / den
 
+def get_imlist(path):
+    return [os.path.join(path,f) for f in os.listdir(path) if f.endswith('.jpg') or f.endswith('.bmp') or f.endswith('.png')]
+
 
 class DataMomemt():
     def __init__(self, path):
         self.picture_path = path
-        self.picture_names = os.listdir(self.picture_path)
-        self.picture_names = self.picture_names[1:]
+        picture_path_list = get_imlist(path)
+        self.picture_names = [os.path.split(img_path)[1] for img_path in picture_path_list]
 
     def moment(self):
         color_features = []
@@ -146,6 +149,7 @@ class DataMomemt():
                 color_feature = []
                 color_feature.append(image_name)
                 color_feature.extend(getColorFeature(self.picture_path + '/' + image_name))
+                print(color_feature)
                 color_features.append(color_feature)
             except OSError:
                 print(image_name + u'图像文件发生错误')
@@ -153,10 +157,10 @@ class DataMomemt():
 
 
 def processFolder(path):
-    outfile = 'data/resutl' + path + '.csv'
+    outfile = 'data/total.csv'
     data = DataMomemt(path)
     feature = data.moment()
-    with open(outfile, 'w', newline='') as out:
+    with open(outfile, 'a', newline='') as out:
         csv_writer = csv.writer(out, dialect='excel')
         for f in feature:
             csv_writer.writerow(f)
@@ -267,13 +271,45 @@ def testone():
     Image.open('total/' + target_image).show()
 
 
-if __name__ == '__main__':
+def query(img_path,num):
     data = pd.read_csv('data/total.csv', header=None)
     title = data[data.columns[0]]
     data = data[data.columns[1:]]
-    re = 0
-    for i in range(100):
-        re += getRight_Ratio()
-        print(i)
-    re = re / 100
-    print(re)
+
+
+    target_feature = getColorFeature(img_path)
+    re = []
+    for i in range(len(data)):
+        re_temp = [title[i]]
+        dist = getDistance_Pear(target_feature, list(data.iloc[i, :]))
+        re_temp.append(dist)
+        re_temp.append(i)
+        re.append(re_temp)
+
+    ##use pearson correlation
+    result = heapq.nlargest(num, re, key=lambda s: s[1])
+    ##use Eruo distance
+    # result = heapq.nsmallest(10,re,key = lambda s:s[1])
+    re = [i[0] for i in result]
+    img = Image.open(img_path)
+    img.save('result/re_1_target.jpg')
+    for i in range(10):
+        img = Image.open('total/' + result[i][0])
+        img.save('result/re_1_similar' + str(i) + '.jpg')
+    return re
+
+
+if __name__ == '__main__':
+    # data = pd.read_csv('data/total.csv', header=None)
+    # title = data[data.columns[0]]
+    # data = data[data.columns[1:]]
+    # re = 0
+    # for i in range(100):
+    #     re += getRight_Ratio()
+    #     print(i)
+    # re = re / 100
+    # print(re)
+    # img = 'total/006_0109.jpg'
+    # re = query(img, 10)
+    # print(re)
+    processFolder('10')
